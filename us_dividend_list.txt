@@ -1,0 +1,4 @@
+[High Value - Dividend Announcements]
+Symbol,Rank,MTF,Quality Score,LTP,Dividend%,Announced,Executed,Volatility%,Details
+[Low Value - Dividend Announcements]
+Symbol,Rank,MTF,Quality Score,LTP,Dividend%,Announced,Executed,Volatility%,Details
