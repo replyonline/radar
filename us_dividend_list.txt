@@ -1,4 +1,5 @@
 [High Value - Dividend Announcements]
-Symbol,Rank,MTF,Quality Score,LTP,Dividend%,Announced,Executed,Volatility%,Details
+Symbol,Rank,Lot,MTF,Quality Score,LTP,Dividend%,Announced,Executed,Volatility%,Details
 [Low Value - Dividend Announcements]
-Symbol,Rank,MTF,Quality Score,LTP,Dividend%,Announced,Executed,Volatility%,Details
+Symbol,Rank,Lot,MTF,Quality Score,LTP,Dividend%,Announced,Executed,Volatility%,Details
+HUBB,322,,1.0,5,524.12,0.27,Feb-15,Feb-27,2.75,(Stock Name: Hubbell Inc; Sector: Industrials; Intrinsic: 72.26; Dividend: 1.42; Revenue: 584 cr; Net Profit: 89 cr; Recommended: buy; Projected High: 585.0; Projected Medium: 545.0; Projected Low: 479.0; All time high: 533.8 => 2.0%; SMA 200: 431.86 => 17.6%; RSI: 68.67; Day Volatility: 2.75; Week Volatility: 5.35; Month Volatility: 10.4; Day Trend: Downtrend; Week Trend: Downtrend; Month Trend: Downtrend; Day Support: 299.42 => 42.87%; Week Support: 299.42 => 42.87%; Month Support: 299.42 => 42.87%; Day NWE: 468.9 => 10.54%; Week NWE: 406.62 => 22.42%; Month NWE: 372.81 => 28.87%)
