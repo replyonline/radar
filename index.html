@@ -475,7 +475,8 @@
     let pdfFilePath = 'https://activegrt.github.io/radar/' + selectedValue + '.pdf';
     let fileUrl = 'https://activegrt.github.io/radar/' + selectedValue + '.txt';
     let chart_ref = document.getElementById('valuation-select')?.value || '/';
-    let symbolPrefix = selectedValue.startsWith('us') ? '' : 'NSE:';
+	let noPrefixList = ['us', 'yf'];
+	let symbolPrefix = noPrefixList.some(p => selectedValue.startsWith(p)) ? '' : 'NSE:';
     
     let sectorData = {};
     let currentSort = { sector: '', key: '', direction: 1 };
@@ -882,7 +883,7 @@
       selectedValue = this.value;
       pdfFilePath = 'https://activegrt.github.io/radar/' + selectedValue + '.pdf';
       fileUrl = 'https://activegrt.github.io/radar/' + selectedValue + '.txt';
-	  symbolPrefix = selectedValue.startsWith('us') ? '' : 'NSE:';
+	  symbolPrefix = noPrefixList.some(p => selectedValue.startsWith(p)) ? '' : 'NSE:';
       
       // Update file modified time
       fetch(fileUrl, { method: 'HEAD' })
