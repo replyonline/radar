@@ -618,7 +618,8 @@
       sectorData = {};
       
       // Track if we're rendering Equity Summary
-      const isEquitySummary = selectedValue === 'eq_summary_list';
+      //const isEquitySummary = selectedValue === 'eq_summary_list';
+      const isEquitySummary = selectedValue === 'eq_summary_list' || selectedValue === 'us_summary_list';
       const isOnlyItem = ['chain_list', 'dividend_list', 'gap_list', 'mf_list', 'gtt_list'].includes(selectedValue);
       let firstSector = null;
 
