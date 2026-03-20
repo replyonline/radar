@@ -2,16 +2,16 @@
 Particulars,Value
 Total Deposit,💵 8018.0
 Total Withdrawal,💵 -27.0
-Total Invested,💵 7991.0
+<b>Total Invested</b>,💵 <b>7991.0</b>
 Closed Equity,📑 -68.0
 Closed Options,📑 795.0
 Brokerage,🏦 -23.0
-Realised P/L,💵 704.0
+<b>Realised P/L</b>,💵 <b>704.0</b>
 Other Charges,🏦 -6.0
-Net Investment,💵 8689.0
+<b> Matured Investment</b>,💵 <b>8689.0</b>
 Active Equity,📑 -1266.0
 Active Options,📑 750.0
-Unrealised P/L,💵 -516.0
+<b>Unrealised P/L</b>,💵 <b>-516.0</b>
 [Closed Equity Trades]
 Symbol,Entry,Exit,Qty,Buy Price,Sell Price,Holding Period,Margin,P&L,Commission
 BITF,2026-02-18,,100.0,2.048,2.0,10,-0.04800000000000004,-4.800000000000004,-1.951
