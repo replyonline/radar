@@ -1,17 +1,17 @@
 [Investment Summary]
 Particulars,Value
-Total Deposit,8017.787
-Total Withdrawal,-27.224999999999998
-Total Invested,7990.562
-Other Charges,-6.0003052
-Closed Equity,-67.71000000000006
-Closed Options,795.0
-Realised P/L,727.29
-Net Investment,8711.8516948
-Active Equity,-1265.7299999999998
-Active Options,749.7209499999999
-Unrealised P/L,-516.0090499999999
-Total,25109.5372896
+Total Deposit,💵 8017.787
+Total Withdrawal,💵 -27.224999999999998
+Total Invested,💵 7990.562
+Other Charges,🏦 -6.0003052
+Closed Equity,📑 -67.71000000000006
+Closed Options,📑 795.0
+Realised P/L,💵 727.29
+Net Investment,💵 8711.8516948
+Active Equity,📑 -1265.7299999999998
+Active Options,📑 749.7209499999999
+Unrealised P/L,💵 -516.0090499999999
+Total,💵 8017.787💵 -27.224999999999998💵 7990.562🏦 -6.0003052📑 -67.71000000000006📑 795.0💵 727.29💵 8711.8516948📑 -1265.7299999999998📑 749.7209499999999💵 -516.0090499999999
 [Closed Equity Trades]
 Symbol,Entry,Exit,Qty,Buy Price,Sell Price,Holding Period,Margin,P&L
 BITF,2026-02-18,,100.0,2.048,2.0,10,-0.04800000000000004,-4.800000000000004
