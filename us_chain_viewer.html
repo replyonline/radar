@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Options Chain Viewer</title>
+    <style>
+        :root {
+            --primary-color: #464a4de3;
+            --secondary-color: #f5f5f5;
+            --focus-color: #1976d2;
+            --accent-color: #1565c0;
+            --text-color: #333;
+            --light-text: #777;
+            --border-color: #e0e0e0;
+            --defensive-color: #2c7be5;
+            --aggressive-color: #e53935;
+            --header-bg: #1a237e;
+            --sort-indicator-color: #1976d2;
+            --buy-color: #e53935;
+            --sell-color: #2c7be5;
+            --strike-highlight: #ffc107;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #f9f9f9;
+            color: var(--text-color);
+            line-height: 1.5;
+            padding: 0;
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 0;
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Compact Header */
+        .mobile-header {
+            background-color: var(--header-bg);
+            color: white;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            min-height: 50px;
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 40%;
+            color: white;
+            text-decoration: none;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Improved Calculator Button */
+        .calculator-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 10px;
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            white-space: nowrap;
+        }
+
+        .calculator-btn:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .calculator-btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .stock-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stock-selector label {
+            font-weight: 600;
+            color: white;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .header-select {
+            padding: 6px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.85rem;
+            min-width: 120px;
+            max-width: 140px;
+            cursor: pointer;
+        }
+
+        .header-select option {
+            background-color: white;
+            color: #333;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        /* Info Container */
+        #info-container {
+            padding: 12px;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        #info-container table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+
+        #info-container th, #info-container td {
+            padding: 8px 6px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        #info-container th {
+            background-color: var(--secondary-color);
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        #info-container td {
+            background-color: #fff;
+            font-weight: 500;
+        }
+
+        /* Strike Price Info */
+        .strike-info {
+            text-align: center;
+            padding: 8px;
+            background-color: #e3f2fd;
+            color: var(--focus-color);
+            font-size: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        /* Table Container - Auto-resizing */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            max-height: 60vh;
+            overflow-y: auto;
+            background-color: white;
+            width: 100%;
+        }
+
+        #data-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        #data-container table {
+            width: auto;
+            min-width: 100%;
+            border-collapse: collapse;
+        }
+
+        #data-container th, #data-container td {
+            padding: 8px 6px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        #data-container th {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .strike-header {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+        }
+
+        .expiry-header {
+            font-size: 0.7rem;
+        }
+
+        .strike-cell {
+            background-color: var(--secondary-color);
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        /* Buy/Sell colors */
+        .buy-price {
+            background-color: rgba(229, 57, 53, 0.1);
+            color: var(--aggressive-color);
+            font-weight: 600;
+        }
+
+        .sell-price {
+            background-color: rgba(44, 123, 229, 0.1);
+            color: var(--defensive-color);
+            font-weight: 600;
+        }
+
+        .buy-price a,
+        .sell-price a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .buy-price a:hover,
+        .sell-price a:hover {
+            text-decoration: underline;
+        }
+
+        .premium-highlight {
+            background-color: #fff8e1;
+            font-weight: 700;
+        }
+
+        .current-strike {
+            background-color: var(--strike-highlight) !important;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* Status messages */
+        .loading, .error {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            color: var(--light-text);
+        }
+
+        .error {
+            color: var(--aggressive-color);
+        }
+
+        /* Very Small Screens */
+        @media (max-width: 360px) {
+            .mobile-header {
+                padding: 6px 8px;
+                min-height: 44px;
+            }
+            
+            .header-title {
+                font-size: 1rem;
+                max-width: 35%;
+            }
+            
+            .header-select {
+                padding: 4px 6px;
+                font-size: 0.8rem;
+                min-width: 100px;
+                max-width: 120px;
+            }
+            
+            .calculator-btn {
+                padding: 5px 8px;
+                font-size: 0.75rem;
+            }
+            
+            .content {
+                padding: 8px;
+            }
+            
+            #info-container th, #info-container td {
+                padding: 6px 4px;
+                font-size: 0.75rem;
+            }
+            
+            #data-container th, #data-container td {
+                padding: 6px 4px;
+                font-size: 0.7rem;
+            }
+        }
+
+        /* Medium Screens */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 1400px;
+                border-radius: 6px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                margin: 10px auto;
+                min-height: calc(100vh - 20px);
+            }
+            
+            .mobile-header {
+                border-radius: 6px 6px 0 0;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            #data-container table {
+                width: 100%;
+                min-width: auto;
+            }
+            
+            .calculator-btn {
+                padding: 7px 12px;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Large Screens */
+        @media (min-width: 1200px) {
+            #data-container table {
+                width: 100%;
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Compact Mobile Header -->
+        <div class="mobile-header">
+            <a href="index.html" class="header-title">Options Chain</a>
+            <div class="header-controls">
+                <a href="options_calculator.html" class="calculator-btn">
+                    <span>🧮</span> Calculator
+                </a>
+                <div class="stock-selector">
+                    <select id="stockSelect" class="header-select">
+                        <option value="360ONE">360ONE</option>
+                        <option value="ABB">ABB</option>
+                        <option value="APLAPOLLO">APLAPOLLO</option>
+                        <option value="AUBANK">AUBANK</option>
+                        <option value="ADANIENSOL">ADANIENSOL</option>
+                        <option value="ADANIENT">ADANIENT</option>
+                        <option value="ADANIGREEN">ADANIGREEN</option>
+                        <option value="ADANIPORTS">ADANIPORTS</option>
+                        <option value="ABCAPITAL">ABCAPITAL</option>
+                        <option value="ALKEM">ALKEM</option>
+                        <option value="AMBER">AMBER</option>
+                        <option value="AMBUJACEM">AMBUJACEM</option>
+                        <option value="ANGELONE">ANGELONE</option>
+                        <option value="APOLLOHOSP">APOLLOHOSP</option>
+                        <option value="ASHOKLEY">ASHOKLEY</option>
+                        <option value="ASIANPAINT">ASIANPAINT</option>
+                        <option value="ASTRAL">ASTRAL</option>
+                        <option value="AUROPHARMA">AUROPHARMA</option>
+                        <option value="DMART">DMART</option>
+                        <option value="AXISBANK">AXISBANK</option>
+                        <option value="BSE">BSE</option>
+                        <option value="BAJAJ-AUTO">BAJAJ-AUTO</option>
+                        <option value="BAJFINANCE">BAJFINANCE</option>
+                        <option value="BAJAJFINSV">BAJAJFINSV</option>
+                        <option value="BAJAJHLDNG">BAJAJHLDNG</option>
+                        <option value="BANDHANBNK">BANDHANBNK</option>
+                        <option value="BANKBARODA">BANKBARODA</option>
+                        <option value="BANKINDIA">BANKINDIA</option>
+                        <option value="BDL">BDL</option>
+                        <option value="BEL">BEL</option>
+                        <option value="BHARATFORG">BHARATFORG</option>
+                        <option value="BHEL">BHEL</option>
+                        <option value="BPCL">BPCL</option>
+                        <option value="BHARTIARTL">BHARTIARTL</option>
+                        <option value="BIOCON">BIOCON</option>
+                        <option value="BLUESTARCO">BLUESTARCO</option>
+                        <option value="BOSCHLTD">BOSCHLTD</option>
+                        <option value="BRITANNIA">BRITANNIA</option>
+                        <option value="CGPOWER">CGPOWER</option>
+                        <option value="CANBK">CANBK</option>
+                        <option value="CDSL">CDSL</option>
+                        <option value="CHOLAFIN">CHOLAFIN</option>
+                        <option value="CIPLA">CIPLA</option>
+                        <option value="COALINDIA">COALINDIA</option>
+                        <option value="COFORGE">COFORGE</option>
+                        <option value="COLPAL">COLPAL</option>
+                        <option value="CAMS">CAMS</option>
+                        <option value="CONCOR">CONCOR</option>
+                        <option value="CROMPTON">CROMPTON</option>
+                        <option value="CUMMINSIND">CUMMINSIND</option>
+                        <option value="DLF">DLF</option>
+                        <option value="DABUR">DABUR</option>
+                        <option value="DALBHARAT">DALBHARAT</option>
+                        <option value="DELHIVERY">DELHIVERY</option>
+                        <option value="DIVISLAB">DIVISLAB</option>
+                        <option value="DIXON">DIXON</option>
+                        <option value="DRREDDY">DRREDDY</option>
+                        <option value="ETERNAL">ETERNAL</option>
+                        <option value="EICHERMOT">EICHERMOT</option>
+                        <option value="EXIDEIND">EXIDEIND</option>
+                        <option value="NYKAA">NYKAA</option>
+                        <option value="FORTIS">FORTIS</option>
+                        <option value="GAIL">GAIL</option>
+                        <option value="GMRAIRPORT">GMRAIRPORT</option>
+                        <option value="GLENMARK">GLENMARK</option>
+                        <option value="GODREJCP">GODREJCP</option>
+                        <option value="GODREJPROP">GODREJPROP</option>
+                        <option value="GRASIM">GRASIM</option>
+                        <option value="HCLTECH">HCLTECH</option>
+                        <option value="HDFCAMC">HDFCAMC</option>
+                        <option value="HDFCBANK">HDFCBANK</option>
+                        <option value="HDFCLIFE">HDFCLIFE</option>
+                        <option value="HAVELLS">HAVELLS</option>
+                        <option value="HEROMOTOCO">HEROMOTOCO</option>
+                        <option value="HINDALCO">HINDALCO</option>
+                        <option value="HAL">HAL</option>
+                        <option value="HINDPETRO">HINDPETRO</option>
+                        <option value="HINDUNILVR">HINDUNILVR</option>
+                        <option value="HINDZINC">HINDZINC</option>
+                        <option value="POWERINDIA">POWERINDIA</option>
+                        <option value="HUDCO">HUDCO</option>
+                        <option value="ICICIBANK">ICICIBANK</option>
+                        <option value="ICICIGI">ICICIGI</option>
+                        <option value="ICICIPRULI">ICICIPRULI</option>
+                        <option value="IDFCFIRSTB">IDFCFIRSTB</option>
+                        <option value="IIFL">IIFL</option>
+                        <option value="ITC">ITC</option>
+                        <option value="INDIANB">INDIANB</option>
+                        <option value="IEX">IEX</option>
+                        <option value="IOC">IOC</option>
+                        <option value="IRCTC">IRCTC</option>
+                        <option value="IRFC">IRFC</option>
+                        <option value="IREDA">IREDA</option>
+                        <option value="INDUSTOWER">INDUSTOWER</option>
+                        <option value="INDUSINDBK">INDUSINDBK</option>
+                        <option value="NAUKRI">NAUKRI</option>
+                        <option value="INFY">INFY</option>
+                        <option value="INOXWIND">INOXWIND</option>
+                        <option value="INDIGO">INDIGO</option>
+                        <option value="JINDALSTEL">JINDALSTEL</option>
+                        <option value="JSWENERGY">JSWENERGY</option>
+                        <option value="JSWSTEEL">JSWSTEEL</option>
+                        <option value="JIOFIN">JIOFIN</option>
+                        <option value="JUBLFOOD">JUBLFOOD</option>
+                        <option value="KEI">KEI</option>
+                        <option value="KPITTECH">KPITTECH</option>
+                        <option value="KALYANKJIL">KALYANKJIL</option>
+                        <option value="KAYNES">KAYNES</option>
+                        <option value="KFINTECH">KFINTECH</option>
+                        <option value="KOTAKBANK">KOTAKBANK</option>
+                        <option value="LTF">LTF</option>
+                        <option value="LICHSGFIN">LICHSGFIN</option>
+                        <option value="LTIM">LTIM</option>
+                        <option value="LT">LT</option>
+                        <option value="LAURUSLABS">LAURUSLABS</option>
+                        <option value="LICI">LICI</option>
+                        <option value="LODHA">LODHA</option>
+                        <option value="LUPIN">LUPIN</option>
+                        <option value="M&M">M&M</option>
+                        <option value="MANAPPURAM">MANAPPURAM</option>
+                        <option value="MANKIND">MANKIND</option>
+                        <option value="MARICO">MARICO</option>
+                        <option value="MARUTI">MARUTI</option>
+                        <option value="MFSL">MFSL</option>
+                        <option value="MAXHEALTH">MAXHEALTH</option>
+                        <option value="MAZDOCK">MAZDOCK</option>
+                        <option value="MPHASIS">MPHASIS</option>
+                        <option value="MCX">MCX</option>
+                        <option value="MUTHOOTFIN">MUTHOOTFIN</option>
+                        <option value="NBCC">NBCC</option>
+                        <option value="NHPC">NHPC</option>
+                        <option value="NMDC">NMDC</option>
+                        <option value="NTPC">NTPC</option>
+                        <option value="NATIONALUM">NATIONALUM</option>
+                        <option value="NESTLEIND">NESTLEIND</option>
+                        <option value="NUVAMA">NUVAMA</option>
+                        <option value="OBEROIRLTY">OBEROIRLTY</option>
+                        <option value="ONGC">ONGC</option>
+                        <option value="OIL">OIL</option>
+                        <option value="PAYTM">PAYTM</option>
+                        <option value="OFSS">OFSS</option>
+                        <option value="POLICYBZR">POLICYBZR</option>
+                        <option value="PGEL">PGEL</option>
+                        <option value="PIIND">PIIND</option>
+                        <option value="PNBHOUSING">PNBHOUSING</option>
+                        <option value="PAGEIND">PAGEIND</option>
+                        <option value="PATANJALI">PATANJALI</option>
+                        <option value="PERSISTENT">PERSISTENT</option>
+                        <option value="PETRONET">PETRONET</option>
+                        <option value="PIDILITIND">PIDILITIND</option>
+                        <option value="PPLPHARMA">PPLPHARMA</option>
+                        <option value="POLYCAB">POLYCAB</option>
+                        <option value="PFC">PFC</option>
+                        <option value="POWERGRID">POWERGRID</option>
+                        <option value="PREMIERENE">PREMIERENE</option>
+                        <option value="PRESTIGE">PRESTIGE</option>
+                        <option value="PNB">PNB</option>
+                        <option value="RBLBANK">RBLBANK</option>
+                        <option value="RECLTD">RECLTD</option>
+                        <option value="RVNL">RVNL</option>
+                        <option value="RELIANCE">RELIANCE</option>
+                        <option value="SBICARD">SBICARD</option>
+                        <option value="SBILIFE">SBILIFE</option>
+                        <option value="SHREECEM">SHREECEM</option>
+                        <option value="SRF">SRF</option>
+                        <option value="SAMMAANCAP">SAMMAANCAP</option>
+                        <option value="MOTHERSON">MOTHERSON</option>
+                        <option value="SHRIRAMFIN">SHRIRAMFIN</option>
+                        <option value="SIEMENS">SIEMENS</option>
+                        <option value="SOLARINDS">SOLARINDS</option>
+                        <option value="SONACOMS">SONACOMS</option>
+                        <option value="SBIN">SBIN</option>
+                        <option value="SAIL">SAIL</option>
+                        <option value="SUNPHARMA">SUNPHARMA</option>
+                        <option value="SUPREMEIND">SUPREMEIND</option>
+                        <option value="SUZLON">SUZLON</option>
+                        <option value="SWIGGY">SWIGGY</option>
+                        <option value="SYNGENE">SYNGENE</option>
+                        <option value="TATACONSUM">TATACONSUM</option>
+                        <option value="TVSMOTOR">TVSMOTOR</option>
+                        <option value="TCS">TCS</option>
+                        <option value="TATAELXSI">TATAELXSI</option>
+                        <option value="TMPV">TMPV</option>
+                        <option value="TATAPOWER">TATAPOWER</option>
+                        <option value="TATASTEEL">TATASTEEL</option>
+                        <option value="TATATECH">TATATECH</option>
+                        <option value="TECHM">TECHM</option>
+                        <option value="FEDERALBNK">FEDERALBNK</option>
+                        <option value="INDHOTEL">INDHOTEL</option>
+                        <option value="PHOENIXLTD">PHOENIXLTD</option>
+                        <option value="TITAN">TITAN</option>
+                        <option value="TORNTPHARM">TORNTPHARM</option>
+                        <option value="TORNTPOWER">TORNTPOWER</option>
+                        <option value="TRENT">TRENT</option>
+                        <option value="TIINDIA">TIINDIA</option>
+                        <option value="UNOMINDA">UNOMINDA</option>
+                        <option value="UPL">UPL</option>
+                        <option value="ULTRACEMCO">ULTRACEMCO</option>
+                        <option value="UNIONBANK">UNIONBANK</option>
+                        <option value="UNITDSPR">UNITDSPR</option>
+                        <option value="VBL">VBL</option>
+                        <option value="VEDL">VEDL</option>
+                        <option value="IDEA">IDEA</option>
+                        <option value="VOLTAS">VOLTAS</option>
+                        <option value="WAAREEENER">WAAREEENER</option>
+                        <option value="WIPRO">WIPRO</option>
+                        <option value="YESBANK">YESBANK</option>
+                        <option value="ZYDUSLIFE">ZYDUSLIFE</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="content">
+            <div id="info-container" class="loading">Loading stock details...</div>
+            <div id="strike-info" class="strike-info"></div>
+            <div class="table-container">
+                <div id="data-container" class="loading">Loading options data...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const infoContainer = document.getElementById('info-container');
+            const dataContainer = document.getElementById('data-container');
+            const strikeInfo = document.getElementById('strike-info');
+            const stockSelect = document.getElementById('stockSelect');
+            
+            // Function to get URL parameters
+            function getQueryParam(param) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(param);
+            }
+            
+            // Load data when page loads
+            let currentSymbol = getQueryParam('symbol') || 'ADANIENT';
+            // Update page title with the symbol
+            document.title = `${currentSymbol} - Options Chain Viewer`;
+            
+            // Set the dropdown to the current symbol
+            if (stockSelect.querySelector(`option[value="${currentSymbol}"]`)) {
+                stockSelect.value = currentSymbol;
+            }
+            
+            // Load data with the dynamic symbol
+            loadData(currentSymbol);
+            
+            // Load data when selection changes
+            stockSelect.addEventListener('change', function() {
+                currentSymbol = this.value;
+                loadData(currentSymbol);
+            });
+            
+            // Function to load CSV data
+            function loadData(stock) {
+                infoContainer.innerHTML = '<div class="loading">Loading stock details...</div>';
+                dataContainer.innerHTML = '<div class="loading">Loading options data for ' + stock + '...</div>';
+                strikeInfo.innerHTML = '';
+                
+                const csvHdrUrl = `https://activegrt.github.io/radar/oi_header.txt`;
+                const csvDetUrl = `https://activegrt.github.io/radar/oi_details.txt`;
+
+                // Fetch both CSV files in parallel
+                Promise.all([
+                    fetch(csvHdrUrl).then(response => {
+                        if (!response.ok) throw new Error('Header file network response was not ok');
+                        return response.text();
+                    }),
+                    fetch(csvDetUrl).then(response => {
+                        if (!response.ok) throw new Error('Details file network response was not ok');
+                        return response.text();
+                    })
+                ])
+                .then(([headerData, detailsData]) => {
+                    // Both files are loaded successfully
+                    processCSVData(headerData, detailsData, stock);
+                })
+                .catch(error => {
+                    dataContainer.innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
+                    console.error('Error:', error);
+                });
+            }
+            
+            // Parse CSV data
+            function processCSVData(hdrData, detData, selectedStock) {
+                try {
+                    // Process header data to find the selected stock
+                    const headerLines = hdrData.split('\n');
+                    let stockData = null;
+                    
+                    for (let i = 0; i < headerLines.length; i++) {
+                        if (headerLines[i].trim() === '') continue;
+                        
+                        const values = headerLines[i].split(',');
+                        if (values[0] === selectedStock) {
+                            stockData = values;
+                            break;
+                        }
+                    }
+                    
+                    if (!stockData) {
+                        throw new Error(`Stock ${selectedStock} not found in header data`);
+                    }
+                    
+                    // Get the start and end rows for the selected stock in details file
+                    const startRow = parseInt(stockData[1]);
+                    const endRow = parseInt(stockData[2]);
+                    
+                    // Process details data for the selected stock
+                    const detailLines = detData.split('\n');
+                    const headers = detailLines[0].split(',').map(header => header.trim());
+                    
+                    const data = [];
+                    for (let i = startRow; i <= endRow; i++) {
+                        if (i >= detailLines.length || detailLines[i].trim() === '') continue;
+                        
+                        const values = detailLines[i].split(',').map(value => value.trim());
+                        const row = {};
+                        
+                        headers.forEach((header, index) => {
+                            row[header] = values[index] || '';
+                        });
+                        
+                        data.push(row);
+                    }
+                    
+                    displayData(data, headers, stockData, selectedStock);
+                } catch (error) {
+                    dataContainer.innerHTML = '<div class="error">Error processing CSV data: ' + error.message + '</div>';
+                }
+            }
+            
+            // Process data and generate HTML table
+            function displayData(data, headers, stock, selectedStock) {
+                // Generate HTML table for stock info
+                let hdrHTML = `
+                    <table border="1" cellspacing="0" cellpadding="5">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>LTP</th>
+                                <th>Book Value</th>
+                                <th>Day Volatile</th>
+                                <th>Week Volatile</th>
+                                <th>Month Volatile</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>${stock[3]}</td>
+                                <td>${stock[4]}</td>
+                                <td>${stock[5]}</td>
+                                <td>${stock[21]}</td>
+                                <td>${stock[22]}</td>
+                                <td>${stock[23]}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+                
+                // Group data by strikePrice
+                const strikeGroups = {};
+                
+                data.forEach(row => {
+                    const strikePrice = row.strikePrice;
+                    if (!strikeGroups[strikePrice]) {
+                        strikeGroups[strikePrice] = { bid: null, ask: null };
+                    }
+                    
+                    if (row.Chain === 'Bid') {
+                        strikeGroups[strikePrice].bid = row;
+                    } else if (row.Chain === 'Ask') {
+                        strikeGroups[strikePrice].ask = row;
+                    }
+                });
+                
+                // Get all unique expiry dates from column headers
+                const expiries = [];
+                
+                headers.forEach(header => {
+                    if (header.startsWith('CE_') || header.startsWith('PE_')) {
+                        const expiry = header.split('_')[1];
+                        if (expiry && !expiries.includes(expiry)) {
+                            expiries.push(expiry);
+                        }
+                    }
+                });
+                
+                // Sort expiries chronologically (assuming format MM-YY)
+                expiries.sort((a, b) => {
+                    const [aMonth, aYear] = a.split('-').map(Number);
+                    const [bMonth, bYear] = b.split('-').map(Number);
+                    
+                    if (aYear !== bYear) {
+                        return aYear - bYear;
+                    }
+                    return aMonth - bMonth;
+                });
+                
+                // Call options: latest first, Put options: earliest first
+                const callExpiries = [...expiries].reverse();
+                const putExpiries = [...expiries]; // Keep in ascending order for puts
+                
+                // Generate HTML table
+                let tableHTML = `
+                    <table>
+                        <thead>
+                            <tr class="header-row">
+                                <th colspan="${callExpiries.length}">Call Options</th>
+                                <th class="strike-header">Strike</th>
+                                <th colspan="${putExpiries.length}">Put Options</th>
+                            </tr>
+                            <tr>
+                `;
+                
+                // Add call expiry headers (latest first)
+                callExpiries.forEach(expiry => {
+                    tableHTML += `<th colspan="1" class="expiry-header">${formatExpiry(expiry)}</th>`;
+                });
+                
+                tableHTML += `<th colspan="1" class="strike-header">Price</th>`;
+                
+                // Add put expiry headers (earliest first)
+                putExpiries.forEach(expiry => {
+                    tableHTML += `<th colspan="1" class="expiry-header">${formatExpiry(expiry)}</th>`;
+                });
+                
+                tableHTML += `</tr></thead><tbody>`;
+                
+                // Add data rows
+                const strikePrices = Object.keys(strikeGroups).sort((a, b) => b - a);
+                const ltp = parseFloat(stock[4]);
+                let closestStrike = null;
+                let minDiff = Infinity;
+                
+                // Find the closest strike price to LTP
+                strikePrices.forEach(strikePrice => {
+                    const strike = parseFloat(strikePrice);
+                    const diff = Math.abs(strike - ltp);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closestStrike = strikePrice;
+                    }
+                });
+                
+                // Update strike info above the table
+                strikeInfo.innerHTML = `Current strike price: <strong>${closestStrike}</strong> (Closest to LTP: ${ltp})`;
+                
+                strikePrices.forEach(strikePrice => {
+                    const group = strikeGroups[strikePrice];
+                    const isCurrentStrike = strikePrice === closestStrike;
+                    
+                    // Ask row
+                    tableHTML += `<tr class="ask-row">`;
+                    
+                    // Call ask prices (latest expiry first)
+                    callExpiries.forEach(expiry => {
+                        const value = group.ask ? group.ask[`CE_${expiry}`] || '' : '';
+                        const highlightClass = shouldHighlightPremium(value, expiry, callExpiries, 'call') ? 'premium-highlight' : '';
+                        const expiryCode = getExpiryCode(expiry);
+                        tableHTML += `<td class="buy-price ${highlightClass}"><a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:${selectedStock}${expiryCode}C${strikePrice}&interval=5">${value || '-'}</a></td>`;
+                    });
+                    
+                    tableHTML += `<td class="strike-cell ${isCurrentStrike ? 'current-strike' : ''}" rowspan="2">${strikePrice}</td>`;
+                    
+                    // Put ask prices (earliest first)
+                    putExpiries.forEach(expiry => {
+                        const value = group.ask ? group.ask[`PE_${expiry}`] || '' : '';
+                        const highlightClass = shouldHighlightPremium(value, expiry, putExpiries, 'put') ? 'premium-highlight' : '';
+                        const expiryCode = getExpiryCode(expiry);
+                        tableHTML += `<td class="buy-price ${highlightClass}"><a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:${selectedStock}${expiryCode}P${strikePrice}&interval=5">${value || '-'}</a></td>`;
+                    });
+                    
+                    tableHTML += `</tr>`;
+                    
+                    // Bid row
+                    tableHTML += `<tr class="bid-row">`;
+                    
+                    // Call bid prices (latest expiry first)
+                    callExpiries.forEach(expiry => {
+                        const value = group.bid ? group.bid[`CE_${expiry}`] || '' : '';
+                        const expiryCode = getExpiryCode(expiry);
+                        tableHTML += `<td class="sell-price"><a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:${selectedStock}${expiryCode}C${strikePrice}&interval=5">${value || '-'}</a></td>`;
+                    });
+                    
+                    // Put bid prices (earliest first)
+                    putExpiries.forEach(expiry => {
+                        const value = group.bid ? group.bid[`PE_${expiry}`] || '' : '';
+                        const expiryCode = getExpiryCode(expiry);
+                        tableHTML += `<td class="sell-price"><a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:${selectedStock}${expiryCode}P${strikePrice}&interval=5">${value || '-'}</a></td>`;
+                    });
+                    
+                    tableHTML += `</tr>`;
+                });
+                
+                tableHTML += `</tbody></table>`;
+                
+                infoContainer.innerHTML = hdrHTML;
+                dataContainer.innerHTML = tableHTML;
+                
+                // Scroll to the current strike price
+                setTimeout(() => {
+                    const currentStrikeElement = document.querySelector('.current-strike');
+                    if (currentStrikeElement) {
+                        const rowElement = currentStrikeElement.closest('tr');
+                        if (rowElement) {
+                            rowElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                }, 100);
+            }
+            
+            // Function to get the last Tuesday of the month
+            function getLastTuesday(year, month) {
+                // month is 0-indexed in JavaScript Date (0 = January, 11 = December)
+                const lastDay = new Date(year, month + 1, 0); // Last day of the month
+                let lastTuesday = lastDay;
+                
+                // Find the last Tuesday by going backwards from the last day
+                while (lastTuesday.getDay() !== 2) { // 2 = Tuesday
+                    lastTuesday.setDate(lastTuesday.getDate() - 1);
+                }
+                
+                return lastTuesday;
+            }
+            
+            // Convert expiry format from MM-YY to TradingView format (YYMMDD)
+            function getExpiryCode(expiry) {
+                if (!expiry) return ''; // Default expiry if not found
+                
+                const [month, year] = expiry.split('-');
+                const fullYear = 2000 + parseInt(year); // Convert YY to YYYY
+                const monthIndex = parseInt(month) - 1; // Convert to 0-indexed month
+                
+                // Get the last Tuesday of the month
+                const lastTuesday = getLastTuesday(fullYear, monthIndex);
+                
+                // Format as YYMMDD (2-digit year, 2-digit month, 2-digit day)
+                const shortYear = lastTuesday.getFullYear().toString().slice(-2);
+                const formattedMonth = (lastTuesday.getMonth() + 1).toString().padStart(2, '0');
+                const formattedDay = lastTuesday.getDate().toString().padStart(2, '0');
+                
+                return shortYear + formattedMonth + formattedDay;
+            }
+            
+            // Check if premium should be highlighted
+            function shouldHighlightPremium(value, currentExpiry, expiries, optionType) {
+                if (!value || value === '-' || value === '0' || value === '0.0') return false;
+                
+                const currentIndex = expiries.indexOf(currentExpiry);
+                if (currentIndex <= 0) return false;
+                
+                const currentValue = parseFloat(value);
+                if (isNaN(currentValue)) return false;
+                
+                // For calls: check if current premium is higher than previous (closer expiry)
+                // For puts: check if current premium is lower than previous (closer expiry)
+                // This would require comparing with previous expiry values
+                // For simplicity, we'll just highlight based on position in expiry list
+                if (optionType === 'call') {
+                    return currentIndex > 0; // Highlight all except the nearest expiry for calls
+                } else {
+                    return currentIndex > 0; // Highlight all except the nearest expiry for puts
+                }
+            }
+            
+            // Format expiry date for display
+            function formatExpiry(expiry) {
+                if (!expiry) return '';
+                const [month, year] = expiry.split('-');
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return `${monthNames[parseInt(month) - 1]} '${year}`;
+            }
+        });
+    </script>
+</body>
+</html>
