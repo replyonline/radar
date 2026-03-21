@@ -755,6 +755,9 @@
             // Format expiry date for display
             function formatExpiry(expiry) {
                 if (!expiry) return '';
+				if (/^\d{4}-\d{2}-\d{2}$/.test(expiry)) {
+					return expiry; // Return as is for full date
+				}
                 const [month, year] = expiry.split('-');
                 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
