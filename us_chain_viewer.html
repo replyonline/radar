@@ -381,12 +381,13 @@
                 <a href="options_calculator.html" class="calculator-btn">
                     <span>🧮</span> Calculator
                 </a>
-                <div class="stock-selector">
+				<button class="calculator-btn" onclick="history.back()">Back</button>
+                <!--<div class="stock-selector">
                     <select id="stockSelect" class="header-select">
                         <option value="360ONE">360ONE</option>
                         <option value="ILMN">ILMN</option>
                     </select>
-                </div>
+                </div>-->
             </div>
         </div>
         
@@ -405,7 +406,7 @@
             const infoContainer = document.getElementById('info-container');
             const dataContainer = document.getElementById('data-container');
             const strikeInfo = document.getElementById('strike-info');
-            const stockSelect = document.getElementById('stockSelect');
+            //const stockSelect = document.getElementById('stockSelect');
             
             // Function to get URL parameters
             function getQueryParam(param) {
@@ -418,20 +419,25 @@
             let currentMarket = getQueryParam('market') || '';
             // Update page title with the symbol
             document.title = `${currentSymbol} - Options Chain Viewer`;
+			
+			let filePrefix = '';
+			if (currentMarket === 'us') {
+				filePrefix = 'us_';
+			}
             
             // Set the dropdown to the current symbol
-            if (stockSelect.querySelector(`option[value="${currentSymbol}"]`)) {
-                stockSelect.value = currentSymbol;
-            }
+            //if (stockSelect.querySelector(`option[value="${currentSymbol}"]`)) {
+            //    stockSelect.value = currentSymbol;
+            //}
             
             // Load data with the dynamic symbol
             loadData(currentSymbol);
             
             // Load data when selection changes
-            stockSelect.addEventListener('change', function() {
-                currentSymbol = this.value;
-                loadData(currentSymbol);
-            });
+            //stockSelect.addEventListener('change', function() {
+            //    currentSymbol = this.value;
+            //    loadData(currentSymbol);
+            //});
             
             // Function to load CSV data
             function loadData(stock) {
@@ -439,8 +445,8 @@
                 dataContainer.innerHTML = '<div class="loading">Loading options data for ' + stock + '...</div>';
                 strikeInfo.innerHTML = '';
                 
-                const csvHdrUrl = `https://activegrt.github.io/radar/` + currentMarket + `oi_header.txt`;
-                const csvDetUrl = `https://activegrt.github.io/radar/` + currentMarket + `oi_details.txt`;
+                const csvHdrUrl = `https://activegrt.github.io/radar/` + filePrefix + `oi_header.txt`;
+                const csvDetUrl = `https://activegrt.github.io/radar/` + filePrefix + `oi_details.txt`;
 
                 // Fetch both CSV files in parallel
                 Promise.all([
