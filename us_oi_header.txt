@@ -10,7 +10,7 @@ AGEN,547,565,AGEN,None,100,3.71,-7.676,None,None,None,None,11 cr,0 cr,buy,None,N
 AGI,566,640,AGI,None,100,38.27,10.589,None,None,None,None,180 cr,88 cr,strong_buy,None,None,None,None,None,None,None,None,None,None,None,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
 AGX,641,773,AGX,None,100,473.85,30.253,None,None,None,None,91 cr,12 cr,hold,None,None,None,None,None,None,None,None,None,None,None,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
 AGYS,774,834,AGYS,None,100,70.81,11.174,None,None,None,None,31 cr,3 cr,strong_buy,None,None,None,None,None,None,None,None,None,None,None,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
-AISP,835,863,AISP,None,100,2.28,-0.208,None,None,None,None,1 cr,3 cr,none,None,None,None,None,None,None,None,None,None,None,None,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+AISP,835,863,AISP,None,100,2.28,-0.208,None,None,None,None,1 cr,3 cr,none,None,None,None,None,None,None,None,None,None,None,,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
 ALAB,864,1010,ALAB,None,100,116.04,8.013,None,None,None,None,85 cr,22 cr,none,None,None,None,None,None,None,None,None,None,None,None,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
 ALLT,1011,1043,ALLT,None,100,6.39,2.336,None,None,None,None,10 cr,0 cr,strong_buy,None,None,None,None,None,None,None,None,None,None,None,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
 ALTS,1044,1062,ALTS,None,100,1.36,12.178,None,None,None,None,2 cr,3 cr,strong_buy,None,None,None,None,None,None,None,None,None,None,None,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
