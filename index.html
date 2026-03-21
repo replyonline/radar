@@ -716,10 +716,11 @@
               const tag = val > 0 ? 'defensive' : 'aggressive';
               return `<td><span class="tag ${tag}">${formatIndianNumber(val)}%</span></td>`;
             } else if (h === 'Symbol') {
-              const optionsLink = selectedValue === 'chain_list' 
+			  const optionsLink = selectedValue === 'chain_list' 
                 ? `<a href="https://activegrt.github.io/radar/chain_viewer.html?symbol=${row[h]}">📶</a>`
-                : '';
-              
+                : selectedValue === 'yf_chain_list'
+                ? `<a href="https://activegrt.github.io/radar/us_chain_viewer.html?symbol=${row[h]}&market=us">📶</a>`
+                : '';              
               // Determine button class and attributes based on details availability
               const buttonClass = hasDetails ? 'stock-btn enabled' : 'stock-btn disabled';
               const onClick = hasDetails ? `onclick="toggleDetails('${sector.replace(/'/g, "\\'")}', ${rowIndex})"` : '';
