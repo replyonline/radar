@@ -1,15 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>PROFESSIONAL TRADING DASHBOARD | Live Market Intelligence</title>
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- Google Fonts Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-  <!-- Font Awesome 6 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PROFESSIONAL TRADING DASHBOARD | Live Market Intelligence</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * {
       margin: 0;
@@ -211,7 +208,6 @@
     </div>
   </div>
 
-  <!-- ROW 1: Market Trend (computed from live S&P500), Market Risk, Events, Global Markets -->
   <div class="grid-4">
     <div class="card">
       <h2><i class="fas fa-chart-line"></i> MARKET REGIME (S&P 500)</h2>
@@ -233,10 +229,9 @@
     </div>
   </div>
 
-  <!-- ROW 2: TOP NEWS + S&P500 CHART + LIQUIDITY INSIGHT -->
   <div class="grid-4">
     <div class="card">
-      <h2><i class="fas fa-newspaper"></i> TOP MARKET NEWS · REUTERS/AP</h2>
+      <h2><i class="fas fa-newspaper"></i> TOP MARKET NEWS · GNews</h2>
       <ul id="newsFeed" class="clean-list"></ul>
     </div>
     <div class="card">
@@ -253,7 +248,6 @@
     </div>
   </div>
 
-  <!-- ROW 3: CRITICAL MACRO – VIX, 10Y, DXY, OIL (all live) -->
   <div class="grid-4">
     <div class="card">
       <h2><i class="fas fa-chart-line"></i> CBOE VIX (Volatility)</h2>
@@ -273,324 +267,202 @@
     </div>
   </div>
 
-  <!-- PROFESSIONAL RISK SUMMARY CARD (fully dynamic) -->
   <div class="card risk-card" style="margin-top: 8px;">
     <h2><i class="fas fa-chart-pie"></i> INSTITUTIONAL RISK FRAMEWORK</h2>
     <div id="riskSummaryText" class="value-large" style="font-size:1.5rem;">Analyzing live exposures</div>
     <div id="riskBreakdown" style="margin-top: 12px; font-size:0.8rem; color:#9ca3af;"></div>
   </div>
   <footer>
-    <i class="fas fa-database"></i> Live data: Financial Modeling Prep API (real-time quotes) • NewsAPI • No hardcoded market values • Professional trading use
+    <i class="fas fa-database"></i> Live data: Financial Modeling Prep API & GNews
   </footer>
 </div>
 
 <script>
-  // ------------------------------------------------------------------
-  // PROFESSIONAL DASHBOARD: NO HARDCODED FALLBACK PRICES / NO MOCK DATA
-  // All market data comes from LIVE API endpoints.
-  // If API fails, error is shown explicitly – no fake values.
-  // Chart uses live S&P 500 daily closes (fetched from FMP historical)
-  // ------------------------------------------------------------------
+const FMP_API_KEY = "QgxJAZjqnZqwC55LXkBP9Yq7RXWaLse1";
+const NEWS_API_KEY = "cb4209bfa6d44432922855eb991688ae";
 
-  const FMP_API_KEY = "QgxJAZjqnZqwC55LXkBP9Yq7RXWaLse1";   // provided API key
-  const NEWS_API_KEY = "cb4209bfa6d44432922855eb991688ae";
+let sp500HistoricalPrices = [];
+let spChartInstance = null;
+let lastSp500Price = null;
 
-  // Global state for live S&P 500 price series (7 days)
-  let sp500HistoricalPrices = [];     // will store closing prices
-  let spChartInstance = null;
-  let lastSp500Price = null;
+function updateTimestamp() {
+  const now = new Date();
+  document.getElementById("liveTimestamp").innerText = now.toUTCString();
+}
+setInterval(updateTimestamp, 1000);
+updateTimestamp();
 
-  // Helper: format timestamp
-  function updateTimestamp() {
-    const now = new Date();
-    document.getElementById("liveTimestamp").innerText = now.toUTCString();
+// ---- Helper: Fetch with CORS proxy ----
+async function fetchProxy(url) {
+  const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+  const res = await fetch(proxy);
+  if (!res.ok) throw new Error(`Proxy fetch failed ${res.status}`);
+  return res.json();
+}
+
+// ---- 1. S&P 500 Historical ----
+async function fetchSP500Historical() {
+  try {
+    const url = `https://financialmodelingprep.com/api/v3/historical-price-full/%5EGSPC?timeseries=7&apikey=${FMP_API_KEY}`;
+    const data = await fetchProxy(url);
+    if (!data.historical || data.historical.length === 0) throw new Error("No historical data");
+    const historical = data.historical.reverse();
+    const prices = historical.map(item => item.close);
+    const dates = historical.map(item => new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' }));
+    sp500HistoricalPrices = prices;
+    lastSp500Price = prices[prices.length - 1];
+    return { prices, dates, lastPrice: lastSp500Price };
+  } catch (err) {
+    console.error("S&P fetch error", err);
+    document.getElementById("sp500LastPrice").innerHTML = `<span class="error-state"><i class="fas fa-exclamation-triangle"></i> Failed to load live S&P data</span>`;
+    throw err;
   }
-  setInterval(updateTimestamp, 1000);
-  updateTimestamp();
+}
 
-  // ---------- 1. FETCH LIVE S&P 500 HISTORICAL DATA (7 trading days) ----------
-  async function fetchSP500Historical() {
-    try {
-      // using FMP historical price for ^GSPC (S&P 500) – last 7 days
-      const url = `https://financialmodelingprep.com/api/v3/historical-price-full/%5EGSPC?timeseries=7&apikey=${FMP_API_KEY}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (!data.historical || data.historical.length === 0) throw new Error("No historical data");
-      // reverse to chronological order (oldest first)
-      const historical = data.historical.reverse();
-      const prices = historical.map(item => item.close);
-      const dates = historical.map(item => {
-        const d = new Date(item.date);
-        return d.toLocaleDateString('en-US', { weekday: 'short' });
-      });
-      sp500HistoricalPrices = prices;
-      const lastClose = prices[prices.length - 1];
-      lastSp500Price = lastClose;
-      return { prices, dates, lastPrice: lastClose };
-    } catch (err) {
-      console.error("S&P historical fetch error:", err);
-      document.getElementById("sp500LastPrice").innerHTML = `<span class="error-state"><i class="fas fa-exclamation-triangle"></i> Failed to load live S&P data</span>`;
-      throw err;
-    }
-  }
+async function renderSPChart() {
+  try {
+    const { prices, dates, lastPrice } = await fetchSP500Historical();
+    const ctx = document.getElementById('sp500LiveChart').getContext('2d');
+    if (spChartInstance) spChartInstance.destroy();
+    spChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: { labels: dates, datasets:[{label:'S&P 500',data:prices,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#60a5fa',fill:true,tension:0.2}]},
+      options: { responsive:true, maintainAspectRatio:true, plugins:{legend:{labels:{color:'#94a3b8',font:{size:9}}}, tooltip:{mode:'index', intersect:false}}, scales:{y:{grid:{color:'#1e293b'},ticks:{color:'#cbd5e1'}}, x:{ticks:{color:'#9ca3af',maxRotation:30}}}}
+    });
+    document.getElementById("sp500LastPrice").innerHTML = `Latest: <strong style="color:#e2e8f0">${lastPrice.toFixed(2)}</strong> USD · live feed`;
+    updateTrendAndRisk(prices);
+  } catch { /* handled */ }
+}
 
-  // Render S&P 500 Chart
-  async function renderSPChart() {
-    try {
-      const { prices, dates, lastPrice } = await fetchSP500Historical();
-      const ctx = document.getElementById('sp500LiveChart').getContext('2d');
-      if (spChartInstance) spChartInstance.destroy();
-      spChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: dates,
-          datasets: [{
-            label: 'S&P 500 (live closes)',
-            data: prices,
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59,130,246,0.1)',
-            borderWidth: 2.5,
-            pointRadius: 3,
-            pointBackgroundColor: '#60a5fa',
-            fill: true,
-            tension: 0.2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: { labels: { color: '#94a3b8', font: { size: 9 } } },
-            tooltip: { mode: 'index', intersect: false }
-          },
-          scales: {
-            y: { grid: { color: '#1e293b' }, ticks: { color: '#cbd5e1' } },
-            x: { ticks: { color: '#9ca3af', maxRotation: 30 } }
-          }
-        }
-      });
-      document.getElementById("sp500LastPrice").innerHTML = `Latest: <strong style="color:#e2e8f0">${lastPrice.toFixed(2)}</strong> USD · live feed`;
-      // compute trend and risk from live series
-      updateTrendAndRisk(prices);
-      return prices;
-    } catch (error) {
-      document.getElementById("trendDisplay").innerHTML = '<span class="error-state"><i class="fas fa-ban"></i> Data error</span>';
-      document.getElementById("riskScore").innerHTML = '<span class="error-state">Unavailable</span>';
-      throw error;
-    }
-  }
+function updateTrendAndRisk(prices) {
+  if (!prices || prices.length < 2) return;
+  const change = prices[prices.length-1] - prices[0];
+  let trendHtml = change>25 ? `<span class="green"><i class="fas fa-arrow-trend-up"></i> BULLISH (+${change.toFixed(2)})</span>` :
+                  change<-25 ? `<span class="red"><i class="fas fa-arrow-trend-down"></i> BEARISH (${change.toFixed(2)})</span>` :
+                  `<span class="neutral"><i class="fas fa-minus-circle"></i> SIDEWAYS (Δ${change.toFixed(2)})</span>`;
+  document.getElementById("trendDisplay").innerHTML = trendHtml;
 
-  function updateTrendAndRisk(prices) {
-    if (!prices || prices.length < 2) return;
-    const first = prices[0];
-    const last = prices[prices.length-1];
-    const change = last - first;
-    let trendHtml = '';
-    if (change > 25) trendHtml = `<span class="green"><i class="fas fa-arrow-trend-up"></i> BULLISH MOMENTUM (+${change.toFixed(2)})</span>`;
-    else if (change < -25) trendHtml = `<span class="red"><i class="fas fa-arrow-trend-down"></i> BEARISH PRESSURE (${change.toFixed(2)})</span>`;
-    else trendHtml = `<span class="neutral"><i class="fas fa-minus-circle"></i> SIDEWAYS / CONSOLIDATION (Δ${change.toFixed(2)})</span>`;
-    document.getElementById("trendDisplay").innerHTML = trendHtml;
+  let volSum=0;
+  for(let i=1;i<prices.length;i++) volSum+=Math.abs(prices[i]-prices[i-1]);
+  const avgVol = volSum/(prices.length-1);
+  let riskText = avgVol>38 ? `<span class="red"><i class="fas fa-waveform"></i> HIGH VOLATILITY (${avgVol.toFixed(1)})</span>` :
+                 avgVol>18 ? `<span class="neutral"><i class="fas fa-chart-line"></i> MODERATE RISK (${avgVol.toFixed(1)})</span>` :
+                 `<span class="green"><i class="fas fa-shield-alt"></i> LOW VOLATILITY</span>`;
+  document.getElementById("riskScore").innerHTML = riskText;
+}
 
-    // volatility risk based on daily absolute changes
-    let volSum = 0;
-    for (let i = 1; i < prices.length; i++) {
-      volSum += Math.abs(prices[i] - prices[i-1]);
-    }
-    const avgVol = volSum / (prices.length - 1);
-    let riskText = '';
-    if (avgVol > 38) riskText = `<span class="red"><i class="fas fa-waveform"></i> HIGH VOLATILITY RISK (Δavg ${avgVol.toFixed(1)})</span>`;
-    else if (avgVol > 18) riskText = `<span class="neutral"><i class="fas fa-chart-line"></i> MODERATE RISK (σ ${avgVol.toFixed(1)})</span>`;
-    else riskText = `<span class="green"><i class="fas fa-shield-alt"></i> LOW VOLATILITY ENVIRONMENT</span>`;
-    document.getElementById("riskScore").innerHTML = riskText;
-  }
+// ---- 2. Live Macro Quotes ----
+async function fetchLiveQuote(symbol) {
+  const url = `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${FMP_API_KEY}`;
+  const data = await fetchProxy(url);
+  if (!data || data.length===0) throw new Error(`No quote for ${symbol}`);
+  return data[0];
+}
 
-  // ---------- 2. LIVE MACRO: VIX, 10Y, DXY, OIL (pure live) ----------
-  async function fetchLiveQuote(symbol) {
-    const url = `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${FMP_API_KEY}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`API error ${res.status} for ${symbol}`);
-    const data = await res.json();
-    if (!data || data.length === 0) throw new Error(`No quote for ${symbol}`);
-    return data[0];
-  }
+async function loadAllMacro() {
+  try {
+    const [vix, tnx, dxy, oil] = await Promise.all([
+      fetchLiveQuote("^VIX"),
+      fetchLiveQuote("US10Y"),
+      fetchLiveQuote("DXY"),
+      fetchLiveQuote("CL=F")
+    ]);
+    document.getElementById("vixLive").innerHTML = `${vix.price.toFixed(2)}`;
+    document.getElementById("bondLive").innerHTML = `${tnx.price.toFixed(2)}%`;
+    document.getElementById("dxyLive").innerHTML = `${dxy.price.toFixed(2)}`;
+    document.getElementById("oilLive").innerHTML = `$${oil.price.toFixed(2)}`;
+    generateRiskSummary(vix.price, tnx.price, dxy.price, oil.price);
+    generateRatesOutlook(tnx.price, vix.price);
+  } catch(err) { console.error(err); }
+}
 
-  async function loadAllMacro() {
-    try {
-      const [vix, tnx, dxy, oil] = await Promise.all([
-        fetchLiveQuote("^VIX"),
-        fetchLiveQuote("^TNX"),
-        fetchLiveQuote("DX-Y.NYB"),
-        fetchLiveQuote("CLUSD")
-      ]);
-      // update DOM
-      document.getElementById("vixLive").innerHTML = `${vix.price.toFixed(2)} <span class="${vix.changesPercentage >= 0 ? 'red' : 'green'} badge-percent">(${vix.changesPercentage >= 0 ? '+' : ''}${vix.changesPercentage?.toFixed(2)}%)</span>`;
-      document.getElementById("bondLive").innerHTML = `${tnx.price.toFixed(2)}% <span class="${tnx.changesPercentage >= 0 ? 'red' : 'green'}">(${tnx.changesPercentage >= 0 ? '+' : ''}${tnx.changesPercentage?.toFixed(2)}%)</span>`;
-      document.getElementById("dxyLive").innerHTML = `${dxy.price.toFixed(2)} <span class="${dxy.changesPercentage >= 0 ? 'red' : 'green'}">(${dxy.changesPercentage >= 0 ? '+' : ''}${dxy.changesPercentage?.toFixed(2)}%)</span>`;
-      document.getElementById("oilLive").innerHTML = `$${oil.price.toFixed(2)} <span class="${oil.changesPercentage >= 0 ? 'green' : 'red'}">(${oil.changesPercentage >= 0 ? '+' : ''}${oil.changesPercentage?.toFixed(2)}%)</span>`;
-      
-      // also compute professional risk summary
-      generateRiskSummary(vix.price, tnx.price, dxy.price, oil.price);
-      generateRatesOutlook(tnx.price, vix.price);
-      return { vix: vix.price, tnx: tnx.price, dxy: dxy.price, oil: oil.price };
-    } catch (err) {
-      console.error("Macro live fetch error:", err);
-      document.getElementById("vixLive").innerHTML = '<span class="error-state">API error</span>';
-      document.getElementById("bondLive").innerHTML = '<span class="error-state">No data</span>';
-      document.getElementById("dxyLive").innerHTML = '<span class="error-state">Unavailable</span>';
-      document.getElementById("oilLive").innerHTML = '<span class="error-state">Failed</span>';
-      throw err;
-    }
-  }
+// ---- Risk Summary & Rates ----
+function generateRiskSummary(vix,y10,dxy,oil){
+  let pts=0,breakdown=[];
+  if(vix>22){pts+=2;breakdown.push(`VIX elevated at ${vix}`);} else if(vix>16){pts+=1;breakdown.push(`VIX moderate (${vix})`);} else breakdown.push(`VIX low (${vix})`);
+  if(y10>4.5){pts+=1.5;breakdown.push(`10Y >4.5%`);} else if(y10>4.0){pts+=0.5;breakdown.push(`10Y above 4%`);} else breakdown.push(`10Y stable`);
+  if(dxy>105){pts+=1;breakdown.push(`DXY >105`);}
+  if(oil>88){pts+=1;breakdown.push(`Oil >$88`);}
+  let finalText="",cls="";
+  if(pts>=3.5){finalText="🔴 HIGH RISK";cls="red";}
+  else if(pts>=2){finalText="🟡 MODERATE RISK";cls="neutral";}
+  else{finalText="🟢 FAVORABLE";cls="green";}
+  document.getElementById("riskSummaryText").innerHTML=`<span class="${cls}">${finalText}</span>`;
+  document.getElementById("riskBreakdown").innerHTML = breakdown.map(b=>`• ${b}`).join(' · ');
+}
 
-  function generateRiskSummary(vix, yield10y, dxy, oil) {
-    let riskPoints = 0;
-    let breakdown = [];
-    if (vix > 22) { riskPoints += 2; breakdown.push(`VIX elevated at ${vix.toFixed(1)} → high stress`); }
-    else if (vix > 16) { riskPoints += 1; breakdown.push(`VIX moderate (${vix.toFixed(1)})`); }
-    else breakdown.push(`VIX low (${vix.toFixed(1)}) → complacency`);
-    
-    if (yield10y > 4.5) { riskPoints += 1.5; breakdown.push(`10Y > 4.5% pressures valuations`); }
-    else if (yield10y > 4.0) { riskPoints += 0.5; breakdown.push(`10Y above 4%`); }
-    else breakdown.push(`10Y ${yield10y.toFixed(2)}% stable`);
-    
-    if (dxy > 105) { riskPoints += 1; breakdown.push(`DXY strength >105 → headwinds for EM`); }
-    else if (dxy > 102) { riskPoints += 0.5; }
-    
-    if (oil > 88) { riskPoints += 1; breakdown.push(`Oil >$88 → inflationary pressure`); }
-    else if (oil > 80) { riskPoints += 0.5; }
-    
-    let finalText = "";
-    let severityClass = "";
-    if (riskPoints >= 3.5) { finalText = "🔴 HIGH RISK ALERT – Reduce leverage, hedge duration"; severityClass = "red"; }
-    else if (riskPoints >= 2) { finalText = "🟡 CAUTIOUS / MODERATE RISK – Tactical allocation advised"; severityClass = "neutral"; }
-    else { finalText = "🟢 FAVORABLE RISK – Pro-risk posture, growth tilt"; severityClass = "green"; }
-    
-    document.getElementById("riskSummaryText").innerHTML = `<span class="${severityClass}">${finalText}</span>`;
-    document.getElementById("riskBreakdown").innerHTML = breakdown.map(b => `• ${b}`).join(' · ');
-  }
-  
-  function generateRatesOutlook(yield10y, vix) {
-    const outlookDiv = document.getElementById("ratesOutlook");
-    const detailDiv = document.getElementById("ratesDetail");
-    if (yield10y > 4.4) {
-      outlookDiv.innerHTML = `<i class="fas fa-chart-line"></i> Hawkish bond vigilantes`;
-      detailDiv.innerHTML = `10Y real yield compression risk. Equities sensitive to repricing.`;
-    } else if (yield10y > 3.8) {
-      outlookDiv.innerHTML = `<i class="fas fa-balance-scale"></i> Neutral / Restrictive territory`;
-      detailDiv.innerHTML = `Fed watch: yields may cap multiple expansion.`;
-    } else {
-      outlookDiv.innerHTML = `<i class="fas fa-dove"></i> Dovish conditions, liquidity supportive`;
-      detailDiv.innerHTML = `Lower yields favor growth & tech.`;
-    }
-    if (vix > 24) detailDiv.innerHTML += ` Elevated VIX suggests macro hedging demand.`;
-  }
+function generateRatesOutlook(y10,vix){
+  const outlook=document.getElementById("ratesOutlook"),detail=document.getElementById("ratesDetail");
+  if(y10>4.4){outlook.innerHTML=`<i class="fas fa-chart-line"></i> Hawkish`;detail.innerHTML=`10Y real yield risk.`;}
+  else if(y10>3.8){outlook.innerHTML=`<i class="fas fa-balance-scale"></i> Neutral`;detail.innerHTML=`Fed watch.`;}
+  else{outlook.innerHTML=`<i class="fas fa-dove"></i> Dovish`;detail.innerHTML=`Liquidity supportive.`;}
+  if(vix>24) detail.innerHTML += ` Elevated VIX suggests hedging.`;
+}
 
-  // ---------- 3. GLOBAL MARKETS (live: major indices via FMP) ----------
-  async function loadGlobalIndices() {
-    const symbols = ["^GSPC", "^IXIC", "^DJI", "^FTSE", "^N225", "^HSI"];
-    const container = document.getElementById("globalMarketsList");
-    container.innerHTML = '<li><i class="fas fa-spinner fa-pulse"></i> Fetching live indices...</li>';
-    try {
-      const promises = symbols.map(sym => fetchLiveQuote(sym).catch(() => null));
-      const results = await Promise.all(promises);
-      container.innerHTML = "";
-      for (let i = 0; i < symbols.length; i++) {
-        const quote = results[i];
-        if (quote && quote.price) {
-          const change = quote.changesPercentage || 0;
-          const cls = change >= 0 ? "green" : "red";
-          const sign = change >= 0 ? '+' : '';
-          const nameMap = {"^GSPC":"S&P 500","^IXIC":"NASDAQ","^DJI":"Dow Jones","^FTSE":"FTSE 100","^N225":"Nikkei 225","^HSI":"Hang Seng"};
-          const displayName = nameMap[symbols[i]] || symbols[i];
-          const li = document.createElement("li");
-          li.innerHTML = `<span><strong>${displayName}</strong></span> <span class="${cls}">${sign}${change.toFixed(2)}%</span>`;
-          container.appendChild(li);
-        } else {
-          const li = document.createElement("li");
-          li.innerHTML = `<span>${symbols[i]}</span> <span class="error-state">offline</span>`;
-          container.appendChild(li);
-        }
-      }
-    } catch (err) {
-      container.innerHTML = '<li class="error-state">Failed to load global market data (API limit?)</li>';
-    }
-  }
+// ---- 3. Global Indices ----
+async function loadGlobalIndices(){
+  const symbols=["^GSPC","^IXIC","^DJI","FTSE","N225","HSI"];
+  const container=document.getElementById("globalMarketsList");
+  container.innerHTML='<li>Fetching indices...</li>';
+  try{
+    const results=await Promise.all(symbols.map(s=>fetchLiveQuote(s).catch(()=>null)));
+    container.innerHTML="";
+    const nameMap={"^GSPC":"S&P 500","^IXIC":"NASDAQ","^DJI":"Dow Jones","FTSE":"FTSE 100","N225":"Nikkei 225","HSI":"Hang Seng"};
+    results.forEach((quote,i)=>{
+      const li=document.createElement("li");
+      if(quote && quote.price){const c=quote.changesPercentage||0;li.innerHTML=`<span><strong>${nameMap[symbols[i]]||symbols[i]}</strong></span> <span class="${c>=0?'green':'red'}">${c>=0?'+':''}${c.toFixed(2)}%</span>`;}
+      else li.innerHTML=`<span>${symbols[i]}</span> <span class="error-state">offline</span>`;
+      container.appendChild(li);
+    });
+  } catch(err){ container.innerHTML='<li class="error-state">Failed to load global markets</li>'; }
+}
 
-  // ---------- 4. LIVE NEWS (pure API, no hardcoded) ----------
-  async function loadLiveNews() {
-    const newsContainer = document.getElementById("newsFeed");
-    newsContainer.innerHTML = '<li><i class="fas fa-spinner fa-pulse"></i> Pulling live headlines...</li>';
-    try {
-      const res = await fetch(`https://newsapi.org/v2/top-headlines?category=business&language=en&pageSize=6&apiKey=${NEWS_API_KEY}`);
-      if (!res.ok) throw new Error(`NewsAPI status ${res.status}`);
-      const data = await res.json();
-      if (!data.articles || data.articles.length === 0) throw new Error("No articles");
-      newsContainer.innerHTML = "";
-      data.articles.slice(0, 6).forEach(article => {
-        const li = document.createElement("li");
-        const link = document.createElement("a");
-        link.href = article.url;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.innerHTML = `<i class="fas fa-external-link-alt" style="font-size:9px; margin-right:8px;"></i> <span class="news-truncate">${article.title}</span>`;
-        li.appendChild(link);
-        newsContainer.appendChild(li);
-      });
-    } catch (err) {
-      console.error("News error", err);
-      newsContainer.innerHTML = '<li class="error-state"><i class="fas fa-exclamation-triangle"></i> News API unavailable – check API key / network (CORS/plan limits)</li><li class="error-state">Professional dashboard: ensure valid NewsAPI key or upgrade plan for production</li>';
-    }
-  }
+// ---- 4. Live News via GNews ----
+async function loadLiveNews(){
+  const container=document.getElementById("newsFeed");
+  container.innerHTML='<li>Loading news...</li>';
+  try{
+    const res=await fetch(`https://gnews.io/api/v4/top-headlines?category=business&lang=en&max=6&apikey=${NEWS_API_KEY}`);
+    const data=await res.json();
+    container.innerHTML="";
+    data.articles.forEach(a=>{
+      const li=document.createElement("li");
+      li.innerHTML=`<a href="${a.url}" target="_blank">${a.title}</a>`;
+      container.appendChild(li);
+    });
+  } catch{ container.innerHTML='<li class="error-state">News unavailable</li>'; }
+}
 
-  // ---------- 5. UPCOMING EVENTS (static calendar from real economic calendar, but not hardcoded values? We fetch from FMP calendar) ----------
-  async function loadEconomicEvents() {
-    const eventsContainer = document.getElementById("eventsList");
-    eventsContainer.innerHTML = '<li><i class="fas fa-spinner fa-pulse"></i> Loading real economic calendar...</li>';
-    try {
-      // Using FMP economic calendar (live)
-      const url = `https://financialmodelingprep.com/api/v3/economic_calendar?apikey=${FMP_API_KEY}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Calendar fetch error ${res.status}`);
-      const data = await res.json();
-      if (!data || data.length === 0) throw new Error("No events");
-      // take first 4 relevant events
-      const topEvents = data.slice(0, 5);
-      eventsContainer.innerHTML = "";
-      topEvents.forEach(event => {
-        const li = document.createElement("li");
-        const dateStr = event.date ? new Date(event.date).toLocaleDateString() : "Upcoming";
-        li.innerHTML = `<span><i class="far fa-calendar"></i> ${event.event || "Key event"}</span> <span style="font-size:0.7rem;">${dateStr}</span>`;
-        li.style.display = "flex";
-        li.style.justifyContent = "space-between";
-        eventsContainer.appendChild(li);
-      });
-    } catch (err) {
-      console.warn("Economic calendar error, using professional fallback without hardcoded prices? but requirement strict: no hardcoding – showing error");
-      eventsContainer.innerHTML = '<li class="error-state"><i class="fas fa-database"></i> Economic calendar API unavailable (FMP key limit). Please upgrade plan for institutional use.</li><li class="error-state">No hardcoded events to preserve data integrity.</li>';
-    }
-  }
+// ---- 5. Economic Calendar ----
+async function loadEconomicEvents(){
+  const container=document.getElementById("eventsList");
+  container.innerHTML='<li>Loading events...</li>';
+  try{
+    const url=`https://financialmodelingprep.com/api/v3/economic_calendar?apikey=${FMP_API_KEY}`;
+    const data=await fetchProxy(url);
+    container.innerHTML="";
+    data.slice(0,5).forEach(e=>{
+      const li=document.createElement("li");
+      const dateStr = e.date? new Date(e.date).toLocaleDateString():"Upcoming";
+      li.innerHTML=`<span><i class="far fa-calendar"></i> ${e.event||"Event"}</span> <span style="font-size:0.7rem;">${dateStr}</span>`;
+      li.style.display="flex"; li.style.justifyContent="space-between";
+      container.appendChild(li);
+    });
+  } catch(err){ container.innerHTML='<li class="error-state">Economic calendar unavailable</li>'; }
+}
 
-  // ---------- MAIN INIT ----------
-  async function initProfessionalDashboard() {
-    try {
-      await renderSPChart();        // live S&P500 series + trend & risk
-      await loadAllMacro();         // VIX, TNX, DXY, OIL live
-      await loadGlobalIndices();    // global equity indices live
-      await loadLiveNews();         // live news headlines
-      await loadEconomicEvents();   // real economic calendar
-    } catch (globalErr) {
-      console.error("Dashboard initialization partial error", globalErr);
-      const errorDivs = document.querySelectorAll('.error-state');
-      if (errorDivs.length === 0) {
-        // general fallback note but no fake numbers
-        const summaryDiv = document.getElementById("riskSummaryText");
-        if (summaryDiv) summaryDiv.innerHTML = "⚠️ Data feed interruption – verify API keys / network";
-      }
-    }
-  }
-  
-  initProfessionalDashboard();
+// ---- INIT DASHBOARD ----
+async function initDashboard(){
+  try{
+    await renderSPChart();
+    await loadAllMacro();
+    await loadGlobalIndices();
+    await loadLiveNews();
+    await loadEconomicEvents();
+  } catch(err){ console.error("Dashboard partial load error", err); }
+}
+
+initDashboard();
 </script>
 </body>
 </html>
