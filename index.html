@@ -718,7 +718,7 @@
             } else if (h === 'Symbol') {
 			  const optionsLink = selectedValue === 'chain_list' 
                 ? `<a href="https://activegrt.github.io/radar/chain_viewer.html?symbol=${row[h]}">📶</a>`
-                : selectedValue === 'yf_chain_list'
+                : (selectedValue === 'yf_chain_list' || selectedValue === 'us_summary_list')
                 ? `<a href="https://activegrt.github.io/radar/us_chain_viewer.html?symbol=${row[h]}&market=us">📶</a>`
                 : '';              
               // Determine button class and attributes based on details availability
