@@ -546,145 +546,235 @@
                     </table>
                 `;
                 
-                // Group data by strikePrice
-                const strikeGroups = {};
-                
-                data.forEach(row => {
-                    const strikePrice = row.strikePrice;
-                    if (!strikeGroups[strikePrice]) {
-                        strikeGroups[strikePrice] = { bid: null, ask: null };
-                    }
-                    
-                    if (row.Chain === 'Bid') {
-                        strikeGroups[strikePrice].bid = row;
-                    } else if (row.Chain === 'Ask') {
-                        strikeGroups[strikePrice].ask = row;
-                    }
-                });
-                
-                // Get all unique expiry dates from column headers
-                const expiries = [];
-                
-                headers.forEach(header => {
-                    if (header.startsWith('CE_') || header.startsWith('PE_')) {
-                        const expiry = header.split('_')[1];
-                        if (expiry && !expiries.includes(expiry)) {
-                            expiries.push(expiry);
-                        }
-                    }
-                });
-                
-                // Sort expiries chronologically (assuming format MM-YY)
-                expiries.sort((a, b) => {
-                    const [aMonth, aYear] = a.split('-').map(Number);
-                    const [bMonth, bYear] = b.split('-').map(Number);
-                    
-                    if (aYear !== bYear) {
-                        return aYear - bYear;
-                    }
-                    return aMonth - bMonth;
-                });
-                
-                // Call options: latest first, Put options: earliest first
-                const callExpiries = [...expiries].reverse();
-                const putExpiries = [...expiries]; // Keep in ascending order for puts
-                
-                // Generate HTML table
-                let tableHTML = `
-                    <table>
-                        <thead>
-                            <tr class="header-row">
-                                <th colspan="${callExpiries.length}">Call Options</th>
-                                <th class="strike-header">Strike</th>
-                                <th colspan="${putExpiries.length}">Put Options</th>
-                            </tr>
-                            <tr>
-                `;
-                
-                // Add call expiry headers (latest first)
-                callExpiries.forEach(expiry => {
-                    tableHTML += `<th colspan="1" class="expiry-header">${formatExpiry(expiry)}</th>`;
-                });
-                
-                tableHTML += `<th colspan="1" class="strike-header">Price</th>`;
-                
-                // Add put expiry headers (earliest first)
-                putExpiries.forEach(expiry => {
-                    tableHTML += `<th colspan="1" class="expiry-header">${formatExpiry(expiry)}</th>`;
-                });
-                
-                tableHTML += `</tr></thead><tbody>`;
-                
-                // Add data rows
-                const strikePrices = Object.keys(strikeGroups).sort((a, b) => b - a);
-                const ltp = parseFloat(stock[4]);
-                let closestStrike = null;
-                let minDiff = Infinity;
-                
-                // Find the closest strike price to LTP
-                strikePrices.forEach(strikePrice => {
-                    const strike = parseFloat(strikePrice);
-                    const diff = Math.abs(strike - ltp);
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        closestStrike = strikePrice;
-                    }
-                });
-                
-                // Update strike info above the table
-                strikeInfo.innerHTML = `Current strike price: <strong>${closestStrike}</strong> (Closest to LTP: ${ltp})`;
-                
-                strikePrices.forEach(strikePrice => {
-                    const group = strikeGroups[strikePrice];
-                    const isCurrentStrike = strikePrice === closestStrike;
-                    
-                    // Ask row
-                    tableHTML += `<tr class="ask-row">`;
-                    
-                    // Call ask prices (latest expiry first)
-                    callExpiries.forEach(expiry => {
-                        const value = group.ask ? group.ask[`CE_${expiry}`] || '' : '';
-                        const highlightClass = shouldHighlightPremium(value, expiry, callExpiries, 'call') ? 'premium-highlight' : '';
-                        const expiryCode = getExpiryCode(expiry);
-                        tableHTML += `<td class="buy-price ${highlightClass}"><a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:${selectedStock}${expiryCode}C${strikePrice}&interval=5">${value || '-'}</a></td>`;
-                    });
-                    
-                    tableHTML += `<td class="strike-cell ${isCurrentStrike ? 'current-strike' : ''}" rowspan="2">${strikePrice}</td>`;
-                    
-                    // Put ask prices (earliest first)
-                    putExpiries.forEach(expiry => {
-                        const value = group.ask ? group.ask[`PE_${expiry}`] || '' : '';
-                        const highlightClass = shouldHighlightPremium(value, expiry, putExpiries, 'put') ? 'premium-highlight' : '';
-                        const expiryCode = getExpiryCode(expiry);
-                        tableHTML += `<td class="buy-price ${highlightClass}"><a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:${selectedStock}${expiryCode}P${strikePrice}&interval=5">${value || '-'}</a></td>`;
-                    });
-                    
-                    tableHTML += `</tr>`;
-                    
-                    // Bid row
-                    tableHTML += `<tr class="bid-row">`;
-                    
-                    // Call bid prices (latest expiry first)
-                    callExpiries.forEach(expiry => {
-                        const value = group.bid ? group.bid[`CE_${expiry}`] || '' : '';
-                        const expiryCode = getExpiryCode(expiry);
-                        tableHTML += `<td class="sell-price"><a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:${selectedStock}${expiryCode}C${strikePrice}&interval=5">${value || '-'}</a></td>`;
-                    });
-                    
-                    // Put bid prices (earliest first)
-                    putExpiries.forEach(expiry => {
-                        const value = group.bid ? group.bid[`PE_${expiry}`] || '' : '';
-                        const expiryCode = getExpiryCode(expiry);
-                        tableHTML += `<td class="sell-price"><a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:${selectedStock}${expiryCode}P${strikePrice}&interval=5">${value || '-'}</a></td>`;
-                    });
-                    
-                    tableHTML += `</tr>`;
-                });
-                
-                tableHTML += `</tbody></table>`;
-                
-                infoContainer.innerHTML = hdrHTML;
-                dataContainer.innerHTML = tableHTML;
+                // ===================== HELPERS =====================
+
+// Parse expiry (supports MM-YY and YYYY-MM-DD)
+function parseExpiry(expiry) {
+    if (!expiry) return null;
+
+    // YYYY-MM-DD
+    if (expiry.includes('-') && expiry.split('-')[0].length === 4) {
+        return new Date(expiry);
+    }
+
+    // MM-YY
+    const [month, year] = expiry.split('-').map(Number);
+    if (!month || !year) return null;
+
+    return new Date(2000 + year, month - 1);
+}
+
+// Format expiry for UI
+function formatExpiry(expiry) {
+    if (!expiry) return '';
+
+    // YYYY-MM-DD → 10 Apr
+    if (expiry.includes('-') && expiry.split('-')[0].length === 4) {
+        const date = new Date(expiry);
+        return date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short'
+        });
+    }
+
+    // MM-YY → keep as is
+    return expiry;
+}
+
+// Convert expiry to TradingView format
+function getExpiryCode(expiry) {
+    if (!expiry) return '';
+
+    // YYYY-MM-DD → DDMMMYY
+    if (expiry.includes('-') && expiry.split('-')[0].length === 4) {
+        const date = new Date(expiry);
+        const day = String(date.getDate()).padStart(2, '0');
+        const monthNames = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+        const month = monthNames[date.getMonth()];
+        const year = String(date.getFullYear()).slice(-2);
+
+        return `${day}${month}${year}`;
+    }
+
+    // MM-YY → fallback
+    return expiry;
+}
+
+
+// ===================== MAIN LOGIC =====================
+
+// Group data by strikePrice
+const strikeGroups = {};
+
+data.forEach(row => {
+    const strikePrice = row.strikePrice;
+
+    if (!strikeGroups[strikePrice]) {
+        strikeGroups[strikePrice] = { bid: null, ask: null };
+    }
+
+    if (row.Chain === 'Bid') {
+        strikeGroups[strikePrice].bid = row;
+    } else if (row.Chain === 'Ask') {
+        strikeGroups[strikePrice].ask = row;
+    }
+});
+
+
+// Extract expiries
+const expiries = [];
+
+headers.forEach(header => {
+    if (header.startsWith('CE_') || header.startsWith('PE_')) {
+        const parts = header.split('_');
+        if (parts.length > 1) {
+            const expiry = parts.slice(1).join('_'); // supports complex formats
+            if (!expiries.includes(expiry)) {
+                expiries.push(expiry);
+            }
+        }
+    }
+});
+
+
+// Sort expiries using real dates
+expiries.sort((a, b) => {
+    const dateA = parseExpiry(a);
+    const dateB = parseExpiry(b);
+
+    if (!dateA || !dateB) return 0;
+    return dateA - dateB;
+});
+
+
+// Call: latest first, Put: earliest first
+const callExpiries = [...expiries].reverse();
+const putExpiries = [...expiries];
+
+
+// ===================== TABLE GENERATION =====================
+
+let tableHTML = `
+    <table>
+        <thead>
+            <tr class="header-row">
+                <th colspan="${callExpiries.length}">Call Options</th>
+                <th class="strike-header">Strike</th>
+                <th colspan="${putExpiries.length}">Put Options</th>
+            </tr>
+            <tr>
+`;
+
+// Call headers
+callExpiries.forEach(expiry => {
+    tableHTML += `<th class="expiry-header">${formatExpiry(expiry)}</th>`;
+});
+
+tableHTML += `<th class="strike-header">Price</th>`;
+
+// Put headers
+putExpiries.forEach(expiry => {
+    tableHTML += `<th class="expiry-header">${formatExpiry(expiry)}</th>`;
+});
+
+tableHTML += `</tr></thead><tbody>`;
+
+
+// Sort strikes
+const strikePrices = Object.keys(strikeGroups).sort((a, b) => b - a);
+
+// Find closest strike
+const ltp = parseFloat(stock[4]);
+let closestStrike = null;
+let minDiff = Infinity;
+
+strikePrices.forEach(strikePrice => {
+    const strike = parseFloat(strikePrice);
+    const diff = Math.abs(strike - ltp);
+
+    if (diff < minDiff) {
+        minDiff = diff;
+        closestStrike = strikePrice;
+    }
+});
+
+// Update UI
+strikeInfo.innerHTML = `Current strike price: <strong>${closestStrike}</strong> (Closest to LTP: ${ltp})`;
+
+
+// Build rows
+strikePrices.forEach(strikePrice => {
+    const group = strikeGroups[strikePrice];
+    const isCurrentStrike = strikePrice === closestStrike;
+
+    // ASK ROW
+    tableHTML += `<tr class="ask-row">`;
+
+    // CALL ASK
+    callExpiries.forEach(expiry => {
+        const value = group.ask ? group.ask[`CE_${expiry}`] || '' : '';
+        const highlightClass = shouldHighlightPremium(value, expiry, callExpiries, 'call') ? 'premium-highlight' : '';
+        const expiryCode = getExpiryCode(expiry);
+
+        tableHTML += `<td class="buy-price ${highlightClass}">
+            <a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:${selectedStock}${expiryCode}C${strikePrice}&interval=5">
+                ${value || '-'}
+            </a>
+        </td>`;
+    });
+
+    tableHTML += `<td class="strike-cell ${isCurrentStrike ? 'current-strike' : ''}" rowspan="2">${strikePrice}</td>`;
+
+    // PUT ASK
+    putExpiries.forEach(expiry => {
+        const value = group.ask ? group.ask[`PE_${expiry}`] || '' : '';
+        const highlightClass = shouldHighlightPremium(value, expiry, putExpiries, 'put') ? 'premium-highlight' : '';
+        const expiryCode = getExpiryCode(expiry);
+
+        tableHTML += `<td class="buy-price ${highlightClass}">
+            <a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:${selectedStock}${expiryCode}P${strikePrice}&interval=5">
+                ${value || '-'}
+            </a>
+        </td>`;
+    });
+
+    tableHTML += `</tr>`;
+
+    // BID ROW
+    tableHTML += `<tr class="bid-row">`;
+
+    // CALL BID
+    callExpiries.forEach(expiry => {
+        const value = group.bid ? group.bid[`CE_${expiry}`] || '' : '';
+        const expiryCode = getExpiryCode(expiry);
+
+        tableHTML += `<td class="sell-price">
+            <a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:${selectedStock}${expiryCode}C${strikePrice}&interval=5">
+                ${value || '-'}
+            </a>
+        </td>`;
+    });
+
+    // PUT BID
+    putExpiries.forEach(expiry => {
+        const value = group.bid ? group.bid[`PE_${expiry}`] || '' : '';
+        const expiryCode = getExpiryCode(expiry);
+
+        tableHTML += `<td class="sell-price">
+            <a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:${selectedStock}${expiryCode}P${strikePrice}&interval=5">
+                ${value || '-'}
+            </a>
+        </td>`;
+    });
+
+    tableHTML += `</tr>`;
+});
+
+tableHTML += `</tbody></table>`;
+
+// Render
+infoContainer.innerHTML = hdrHTML;
+dataContainer.innerHTML = tableHTML;
                 
                 // Scroll to the current strike price
                 setTimeout(() => {
