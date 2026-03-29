@@ -913,6 +913,12 @@
           console.error('File load failed:', err);
         });
     });
+		  
+	function showPopup(content) {
+	  let popup = window.open("", "", "width=300,height=200");
+	  popup.document.write(content);
+	}
+		  
   </script>
 </body>
 </html>
