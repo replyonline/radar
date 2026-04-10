@@ -2,4 +2,3 @@
 Symbol,Rank,Lot,MTF,Quality Score,LTP,Dividend%,Announced,Executed,Volatility%,Details
 [Low Value - Dividend Announcements]
 Symbol,Rank,Lot,MTF,Quality Score,LTP,Dividend%,Announced,Executed,Volatility%,Details
-WLY,2254,100,1.0,3,39.05,0.91,Apr-02,Apr-07,2.63,(Stock Name: John Wiley & Sons, Inc.; Sector: Communication Services; Intrinsic: 14.54; Dividend: 0.35; Revenue: 167 cr; Net Profit: 15 cr; Recommended: none; Projected High: 66.0; Projected Medium: 66.0; Projected Low: 66.0; All time high: 71.75 => 46.0%; SMA 200: 36.42 => 6.72%; RSI: 74.18; Day Volatility: 2.63; Week Volatility: 6.75; Month Volatility: 13.76; Day Trend: Downtrend; Week Trend: Downtrend; Month Trend: Downtrend; Day Support: 0.0 => 100.0%; Week Support: 28.83 => 26.16%; Month Support: 28.83 => 26.16%; Day NWE: 33.98 => 12.98%; Week NWE: 26.69 => 31.66%; Month NWE: 23.75 => 39.19%)
