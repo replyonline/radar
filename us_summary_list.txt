@@ -9,9 +9,9 @@ Brokerage,🏦 -92
 <b>Realised P/L</b>,💵 <b>277                        </b>
 Other Charges,🏦 -15                        
 <b> Matured Investment</b>,💵 <b>6265                        </b>
-Active Equity,📑 -425                        
-Active Options,📑 -28                        
-<b>Unrealised P/L</b>,💵 <b>-453                        </b>
+Active Equity,📑 -453                        
+Active Options,📑 -29                        
+<b>Unrealised P/L</b>,💵 <b>-482                        </b>
 [Closed Equity Trades]
 Symbol,Entry,Exit,Qty,Buy Price,Sell Price,Holding Period,Margin,P&L,Commission
 ACHR,2026-03-05,,100.0,6.46,5.5,44,-0.96,-96.0,-1.03083
@@ -99,12 +99,12 @@ ZENA  260417C00002500,2026-03-23,2026-04-17,1.0,0.0,0.3,26,0.3,30.0,-1.05374
 ZENA  260515C00002500,2026-04-21,2026-05-15,1.0,0.0,0.22,25,0.22,22.0,-0.0016932
 [Active Equity Positions]
 Symbol,Buy Price,Current Price,qty,trade_date,Margin,P&L,Premium Collected,Brokerage Paid,Active Contract,Recovery Cost,Link
-ALDX,5.01,1.68,100.0,2026-03-09,-3.33,-333.0,180,-0.05124,,-153.05124,<table border=1 class=dataframe>  <thead>    <tr style=text-align: right;>      <th>Expiry</th>      <th>Days</th>      <th>ITM</th>      <th>ITM_Premium</th>      <th>ITM_percent</th>      <th>OTM</th>      <th>OTM_Premium</th>      <th>OTM_percent</th>    </tr>  </thead>  <tbody>    <tr>      <td>2026-05-22</td>      <td>5</td>      <td>2.0</td>      <td>0.75</td>      <td>44.64</td>      <td>NaN</td>      <td>NaN</td>      <td>NaN</td>    </tr>    <tr>      <td>2026-06-18</td>      <td>32</td>      <td>2.0</td>      <td>0.60</td>      <td>35.71</td>      <td>NaN</td>      <td>NaN</td>      <td>NaN</td>    </tr>    <tr>      <td>2026-06-26</td>      <td>40</td>      <td>NaN</td>      <td>NaN</td>      <td>NaN</td>      <td>1.5</td>      <td>0.75</td>      <td>44.64</td>    </tr>  </tbody></table>
-ZENA,2.44,1.52,100.0,2026-03-23,-0.9199999999999999,-92.0,52,-1.0554332,,-41.0554332,<table border=1 class=dataframe>  <thead>    <tr style=text-align: right;>      <th>Expiry</th>      <th>Days</th>      <th>ITM</th>      <th>ITM_Premium</th>      <th>ITM_percent</th>      <th>OTM</th>      <th>OTM_Premium</th>      <th>OTM_percent</th>    </tr>  </thead>  <tbody>    <tr>      <td>2026-06-18</td>      <td>32</td>      <td>2.0</td>      <td>0.70</td>      <td>46.05</td>      <td>1.5</td>      <td>0.25</td>      <td>16.45</td>    </tr>    <tr>      <td>2026-08-21</td>      <td>96</td>      <td>2.0</td>      <td>0.80</td>      <td>52.63</td>      <td>1.5</td>      <td>0.50</td>      <td>32.89</td>    </tr>    <tr>      <td>2026-11-20</td>      <td>187</td>      <td>2.0</td>      <td>0.85</td>      <td>55.92</td>      <td>NaN</td>      <td>NaN</td>      <td>NaN</td>    </tr>    <tr>      <td>2027-01-15</td>      <td>243</td>      <td>2.0</td>      <td>1.05</td>      <td>69.08</td>      <td>1.5</td>      <td>0.60</td>      <td>39.47</td>    </tr>    <tr>      <td>2028-01-21</td>      <td>614</td>      <td>NaN</td>      <td>NaN</td>      <td>NaN</td>      <td>1.5</td>      <td>1.35</td>      <td>88.82</td>    </tr>  </tbody></table>
+ALDX,5.01,1.55,100.0,2026-03-09,-3.46,-346.0,180,-0.05124,,-166.05124,<table border=1 class=dataframe>  <thead>    <tr style=text-align: right;>      <th>Expiry</th>      <th>Days</th>      <th>ITM</th>      <th>ITM_Premium</th>      <th>ITM_percent</th>      <th>OTM</th>      <th>OTM_Premium</th>      <th>OTM_percent</th>    </tr>  </thead>  <tbody>    <tr>      <td>2026-06-18</td>      <td>23</td>      <td>2.0</td>      <td>0.6</td>      <td>38.71</td>      <td>None</td>      <td>None</td>      <td>None</td>    </tr>  </tbody></table>
+ZENA,2.44,1.37,100.0,2026-03-23,-1.0699999999999998,-106.99999999999999,52,-1.0554332,,-56.05543319999999,<table border=1 class=dataframe>  <thead>    <tr style=text-align: right;>      <th>Expiry</th>      <th>Days</th>      <th>ITM</th>      <th>ITM_Premium</th>      <th>ITM_percent</th>      <th>OTM</th>      <th>OTM_Premium</th>      <th>OTM_percent</th>    </tr>  </thead>  <tbody>    <tr>      <td>2026-06-18</td>      <td>23</td>      <td>1.5</td>      <td>0.35</td>      <td>25.55</td>      <td>NaN</td>      <td>NaN</td>      <td>NaN</td>    </tr>    <tr>      <td>2026-08-21</td>      <td>87</td>      <td>1.5</td>      <td>0.65</td>      <td>47.45</td>      <td>NaN</td>      <td>NaN</td>      <td>NaN</td>    </tr>    <tr>      <td>2026-11-20</td>      <td>178</td>      <td>1.5</td>      <td>1.05</td>      <td>76.64</td>      <td>1.0</td>      <td>0.50</td>      <td>36.50</td>    </tr>    <tr>      <td>2028-01-21</td>      <td>605</td>      <td>NaN</td>      <td>NaN</td>      <td>NaN</td>      <td>1.0</td>      <td>1.05</td>      <td>76.64</td>    </tr>  </tbody></table>
 [Active Option Positions]
 Symbol,Entry Price,Current Price,qty,Expiry,Call/Put,Margin,P&L
-UUP   260618C00028000,0.2004795,0.1173,1.0,2026-06-18,C,0.0831795,-8.31795
-UUP   260618P00028000,0.5504795,0.35,1.0,2026-06-18,P,0.20047950000000003,-20.047950000000004
+UUP   260618C00028000,0.2004795,0.0751,1.0,2026-06-18,C,0.1253795,-12.53795
+UUP   260618P00028000,0.5504795,0.3903,1.0,2026-06-18,P,0.16017950000000003,-16.017950000000003
 [Cash Transaction]
 Transaction Date,Description,Value
 2026-02-09,Deposit,13.612499999999999
