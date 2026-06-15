@@ -2,3 +2,4 @@
 Symbol,Rank,Lot,MTF,Quality Score,LTP,Dividend%,Announced,Executed,Volatility%,Details
 [Low Value - Dividend Announcements]
 Symbol,Rank,Lot,MTF,Quality Score,LTP,Dividend%,Announced,Executed,Volatility%,Details
+SCVL,3433,100,1.0,1,17.4,0.98,Jun-14,Jul-06,5.04,(Stock Name: Shoe Carnival, Inc.; Sector: Consumer Cyclical; Intrinsic: 24.8; Dividend: 0.17; Revenue: 113 cr; Net Profit: 4 cr; Recommended: buy; Projected High: 22.0; Projected Medium: 22.0; Projected Low: 22.0; All time high: 46.92 => 63.0%; SMA 200: 18.8 => -8.07%; RSI: 53.12; Day Volatility: 5.04; Week Volatility: 9.73; Month Volatility: 20.24; Day Trend: Downtrend; Week Trend: Downtrend; Month Trend: Downtrend; Day Support: 16.14 => 7.24%; Week Support: 16.14 => 7.24%; Month Support: 19.24 => -10.57%; Day NWE: 14.78 => 15.05%; Week NWE: 11.0 => 36.78%; Month NWE: 7.87 => 54.78%)
